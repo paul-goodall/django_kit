@@ -109,14 +109,14 @@ function django_add_existing_app() {
   rm ${app_name}/README.md
   rm -rf ${app_name}/.git
   
-  if [ $app_name = "default_app" ]; then
+  if [ "$app_name" = "default_app" ]; then
       rm default_app/create_navbar/list_apps.txt
       touch default_app/create_navbar/list_apps.txt
   fi
   echo "${app_name}\n" >> default_app/create_navbar/list_apps.txt
   touch $app_name/templates/$app_name/navbar.html
 
-  if [ $app_name == "default_app" ]; then
+  if [ "$app_name" = "default_app" ]; then
       bash default_app/create_navbar/create_navbar_base.sh
   fi
 
