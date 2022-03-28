@@ -74,7 +74,7 @@ EOF
 
   echo "def ${app_name}_home(request):\n\treturn render(request, '${app_name}/home.html')" >> ${app_name}/views.py
 
-  echo "${app_name}\n" >> default_app/create_navbar/list_apps.txt
+  echo "${app_name}" >> default_app/create_navbar/list_apps.txt
 
 my_navbar=$(cat << EOF
 {% if user.is_authenticated %}
@@ -117,13 +117,20 @@ function django_add_existing_app() {
   fi
   echo "${app_name}\n" >> default_app/create_navbar/list_apps.txt
   touch $app_name/templates/$app_name/navbar.html
-  bash default_app/create_navbar/create_navbar_base.sh
+
+  if [ $app_name = "default_app" ]; then
+      bash default_app/create_navbar/create_navbar_base.sh
+  fi
+
 
   # For each app created you need to do two things:
   # 1. Add the app to the parent project's SETTINGS file
   # 2. Add the url for the app homepage into the parent project's URL file
-  echo "\n\n# Django Create_App appending: \n\n" >> ${django_name}/settings.py
+  echo "\n\n# Django Create_App appending: \n" >> ${django_name}/settings.py
   echo "INSTALLED_APPS.append('${app_name}')\n"  >> ${django_name}/settings.py
+  if [ $app_name = "default_app" ]; then
+    echo "INSTALLED_APPS.append('fontawesomefree')\n"  >> ${django_name}/settings.py
+  fi
   echo "\n# Django Create_App appending:\nimport ${app_name}.urls\n" >> ${django_name}/urls.py
   echo "urlpatterns = urlpatterns + ${app_name}.urls.my_urls\n"      >> ${django_name}/urls.py
 
@@ -158,7 +165,27 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 " >> ${django_name}/settings.py
 
-  echo "secret_key.txt" > .gitignore
+  touch .gitignore
+  echo "secret_key.txt\nemail_address.txt"  >> .gitignore
+  echo "secret_key.txt\nemail_app_password.txt" >> .gitignore
+  cp ~/.email_address.txt ./email_address.txt
+  cp ~/.email_app_password.txt ./email_app_password.txt  
+
+my_email_settings=$(cat << EOF
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+
+with open(BASE_DIR / 'email_address.txt', 'r') as file:
+	EMAIL_HOST_USER = file.read().rstrip()
+
+with open(BASE_DIR / 'email_app_password.txt', 'r') as file:
+	EMAIL_HOST_PASSWORD = file.read().rstrip()
+EOF
+)
+  echo $my_email_settings >> ${django_name}/settings.py
+  
   grep "SECRET_KEY = " ${django_name}/settings.py > secret_key.txt
   sed -i "" "s/SECRET_KEY = //" secret_key.txt
   sed -i "" "s/'//g" secret_key.txt
