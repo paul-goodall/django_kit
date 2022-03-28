@@ -85,8 +85,6 @@ my_navbar=$(cat << EOF
 EOF
 )
   echo $my_navbar > $app_name/templates/$app_name/navbar.html
-  bash default_app/create_navbar/create_navbar_base.sh
-
 }
 # =====================
 function django_add_existing_app() {
@@ -118,7 +116,7 @@ function django_add_existing_app() {
   echo "${app_name}\n" >> default_app/create_navbar/list_apps.txt
   touch $app_name/templates/$app_name/navbar.html
 
-  if [ $app_name = "default_app" ]; then
+  if [ $app_name == "default_app" ]; then
       bash default_app/create_navbar/create_navbar_base.sh
   fi
 
