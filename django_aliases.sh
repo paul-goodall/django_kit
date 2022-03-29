@@ -144,8 +144,15 @@ function django_init() {
     echo "Creating Project: ${project_name} for Django name :${django_name}\n"
   else
     echo "Usage:\n"
-    echo "django_init REQUIRED_PROJECT_NAME <optional_initial_app_name>\n"
+    echo "django_init REQUIRED_PROJECT_NAME <clean>\n"
     return 1
+  fi
+
+  do_app=1
+  if [ -n "$2" ]; then
+    if [ "$2" = "clean" ]; then
+      do_app=0
+    fi
   fi
 
   django-admin startproject $django_name
@@ -191,7 +198,9 @@ EOF
   new_secret_line="with open(BASE_DIR \/ 'secret_key.txt', 'r') as file:\n\tSECRET_KEY = file.read().rstrip()"
   sed -i "" "s/SECRET_KEY.*/${new_secret_line}/" ${django_name}/settings.py
 
-  django_add_existing_app default_app ${django_name}
+  if [ do_app = 1 ]; then
+     django_add_existing_app default_app ${django_name}
+  fi
 
   open -a Atom .
 }
