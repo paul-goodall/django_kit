@@ -263,7 +263,7 @@ EOF
   echo "INSTALLED_APPS.append('crispy_forms')" >> ${django_name}/settings.py
 
   if [ do_app = 1 ]; then
-     django_add_existing_app default_app ${django_name}
+     django_add_existing_app custom_user_auth_app ${django_name}
   fi
 
   open -a Atom .
