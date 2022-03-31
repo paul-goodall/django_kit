@@ -34,34 +34,63 @@ function django_create_new_app() {
     echo "Django name name must be specified."
     return 1
   fi
+
+# Determine which BASE_APP is present already within the project:
+base_app=""
+[ -d "./default_app" ]          && base_app="default_app"
+[ -d "./custom_user_auth_app" ] && base_app="custom_user_auth_app"
+if [ "$app_name" = "default_app" ]; then
+  echo "No BASE_APP is present. Exiting."
+  return 1
+fi
+
+
+# Create the app and the standard directories that you will need:
   python3 manage.py startapp $app_name
   mkdir -p $app_name/templates/$app_name
   mkdir -p $app_name/static/$app_name
   mkdir -p media/$app_name/images
 
-  # For each app created you need to do three things:
-  # 1. Add the app to the parent project's SETTINGS file
-  # 2. Add the url for the app homepage into the parent project's URL file
-  # 3. Tell the app's Views what to return for that particular view
-  echo "\n\n# Django Create_App appending: \n\n" >> ${django_name}/settings.py
-  echo "INSTALLED_APPS.append('${app_name}')\n"  >> ${django_name}/settings.py
-  
-  echo "\n# Django Create_App appending: \n"   >> ${django_name}/urls.py
-  echo "import ${app_name}.urls\n" >> ${django_name}/urls.py
-  echo "urlpatterns = urlpatterns + ${app_name}.urls.my_urls\n" >> ${django_name}/urls.py
+# Register your new in the Project Settings:
+my_app_inc=$(cat << EOF
+# Django Create_App appending:
+INSTALLED_APPS.append('${app_name}')
 
+EOF
+)
+  echo $my_app_inc >> ${django_name}/settings.py
+
+# Setup your App URLs as a standalone app:
 my_app_urls=$(cat << EOF
-from django.urls import path
-from . import views\n
-my_urls = [
-    path('${app_name}/', views.${app_name}_home, name='${app_name}_home'),
+from django.urls import path, re_path
+from . import views as ${app_name}_views
+urlpatterns = [
+    path('${app_name}/', ${app_name}_views.${app_name}_home, name='home'),
 ]
 EOF
 )
   echo $my_app_urls > ${app_name}/urls.py
-  
-  echo "{% extends 'default_app/base.html' %}\n\n{% block content %}{% endblock %}" > ${app_name}/templates/${app_name}/base.html
 
+# Register your App URLs in the Project URLs:
+my_urls_inc=$(cat << EOF
+from django.conf.urls import include
+urlpatterns.append(path('', include(('${app_name}.urls', '${app_name}'), namespace='${app_name}')))
+
+EOF
+)
+  echo $my_urls_inc >> ${django_name}/urls.py
+
+# Create your App base template:
+my_base_html=$(cat << EOF
+{% extends '${base_app}/base.html' %}
+
+{% block content %}{% endblock %}
+
+EOF
+)
+  echo $my_base_html > ${app_name}/templates/${app_name}/base.html
+
+# Create your App homepage placeholder:
 my_app_home=$(cat << EOF
 {% extends '${app_name}/base.html' %}
 \n
@@ -72,19 +101,28 @@ EOF
 )
   echo $my_app_home > ${app_name}/templates/${app_name}/home.html
 
-  echo "def ${app_name}_home(request):\n\treturn render(request, '${app_name}/home.html')" >> ${app_name}/views.py
+# Add the View function to deal with the home response:
+my_app_home_def=$(cat << EOF
+def home(request):
+\treturn render(request, '${app_name}/home.html')
+EOF
+)
+  echo $my_app_home_def >> ${app_name}/views.py
 
-  echo "${app_name}" >> default_app/create_navbar/list_apps.txt
-
+# Create the Navbar section so that your app is included in the NavBar:
 my_navbar=$(cat << EOF
 {% if user.is_authenticated %}
     <li class="nav-item">
-      <a class="nav-link" href="{% url '${app_name}_home' %}">${app_name}</a>
+      <a class="nav-link" href="{% url '${app_name}:home' %}">${app_name}</a>
     </li>
 {% endif %}
 EOF
 )
   echo $my_navbar > $app_name/templates/$app_name/navbar.html
+
+# Register the app with the NavBar script in the BASE_APP:
+  echo "${app_name}" >> ${base_app}/create_navbar/list_apps.txt
+
 }
 # =====================
 function django_add_existing_app() {
@@ -101,36 +139,60 @@ function django_add_existing_app() {
     echo "Django name name must be specified."
     return 1
   fi
-  python3 manage.py startapp $app_name
-  mkdir -p media/$app_name/images
 
+# Create the app and the standard directories that you will need:
+  python3 manage.py startapp $app_name
+
+# Determine which BASE_APP is present already within the project:
+  base_app=""
+  [ -d "./default_app" ]          && base_app="default_app"
+  [ -d "./custom_user_auth_app" ] && base_app="custom_user_auth_app"
+  if [ "$app_name" = "default_app" ]; then
+    echo "No BASE_APP is present. Exiting."
+    return 1
+  fi
+
+# Remove the created app and create a clone the existin app:
   rm -rf $app_name
   git clone https://github.com/paul-goodall/${app_name}.git
   rm ${app_name}/README.md
   rm -rf ${app_name}/.git
-  
-  if [ "$app_name" = "default_app" ]; then
-      rm default_app/create_navbar/list_apps.txt
-      touch default_app/create_navbar/list_apps.txt
+  mkdir -p $app_name/templates/$app_name
+  mkdir -p $app_name/static/$app_name
+  mkdir -p media/$app_name/images
+
+  if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
+      rm $app_name/create_navbar/list_apps.txt
+      touch $app_name/create_navbar/list_apps.txt
   fi
-  echo "${app_name}\n" >> default_app/create_navbar/list_apps.txt
+  echo "${app_name}" >> ${base_app}/create_navbar/list_apps.txt
   touch $app_name/templates/$app_name/navbar.html
 
-  if [ "$app_name" = "default_app" ]; then
-      bash default_app/create_navbar/create_navbar_base.sh
+  if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
+      bash ${base_app}/create_navbar/create_navbar_base.sh
   fi
 
 
-  # For each app created you need to do two things:
-  # 1. Add the app to the parent project's SETTINGS file
-  # 2. Add the url for the app homepage into the parent project's URL file
-  echo "\n\n# Django Create_App appending: \n" >> ${django_name}/settings.py
-  echo "INSTALLED_APPS.append('${app_name}')\n"  >> ${django_name}/settings.py
-  if [ $app_name = "default_app" ]; then
+  # Register your new in the Project Settings:
+my_app_inc=$(cat << EOF
+# Django Create_App appending:
+INSTALLED_APPS.append('${app_name}')
+
+EOF
+)
+    echo $my_app_inc >> ${django_name}/settings.py
+
+  if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
     echo "INSTALLED_APPS.append('fontawesomefree')\n"  >> ${django_name}/settings.py
   fi
-  echo "\n# Django Create_App appending:\nimport ${app_name}.urls\n" >> ${django_name}/urls.py
-  echo "urlpatterns = urlpatterns + ${app_name}.urls.my_urls\n"      >> ${django_name}/urls.py
+
+my_url_settings=$(cat << EOF
+# Django Create_App appending:
+from django.conf.urls import include
+urlpatterns.append(path('', include(('${app_name}.urls', '${app_name}'), namespace='${app_name}')))
+
+EOF
+)
 
   python3 manage.py migrate
 
@@ -174,7 +236,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
   echo "secret_key.txt\nemail_address.txt"  >> .gitignore
   echo "secret_key.txt\nemail_app_password.txt" >> .gitignore
   cp ~/.email_address.txt ./email_address.txt
-  cp ~/.email_app_password.txt ./email_app_password.txt  
+  cp ~/.email_app_password.txt ./email_app_password.txt
 
 my_email_settings=$(cat << EOF
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -190,13 +252,15 @@ with open(BASE_DIR / 'email_app_password.txt', 'r') as file:
 EOF
 )
   echo $my_email_settings >> ${django_name}/settings.py
-  
+
   grep "SECRET_KEY = " ${django_name}/settings.py > secret_key.txt
   sed -i "" "s/SECRET_KEY = //" secret_key.txt
   sed -i "" "s/'//g" secret_key.txt
 
   new_secret_line="with open(BASE_DIR \/ 'secret_key.txt', 'r') as file:\n\tSECRET_KEY = file.read().rstrip()"
   sed -i "" "s/SECRET_KEY.*/${new_secret_line}/" ${django_name}/settings.py
+
+  echo "INSTALLED_APPS.append('crispy_forms')" >> ${django_name}/settings.py
 
   if [ do_app = 1 ]; then
      django_add_existing_app default_app ${django_name}
