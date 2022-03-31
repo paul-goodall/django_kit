@@ -232,9 +232,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 " >> ${django_name}/settings.py
 
-  touch .gitignore
-  echo "secret_key.txt\nemail_address.txt"  >> .gitignore
-  echo "secret_key.txt\nemail_app_password.txt" >> .gitignore
+gitignore_settings=$(cat << EOF
+secret_key.txt
+email_address.txt
+email_app_password.txt
+EOF
+)
+  echo $gitignore_settings > .gitignore
+
   cp ~/.email_address.txt ./email_address.txt
   cp ~/.email_app_password.txt ./email_app_password.txt
 
