@@ -270,6 +270,7 @@ EOF
 
   echo "\nINSTALLED_APPS.append('crispy_forms')\n" >> ${django_name}/settings.py
 
+  echo "do_app: ${do_app}"
   if [ do_app = 1 ]; then
       echo "Downloading: custom_user_auth_app"
      django_add_existing_app custom_user_auth_app ${django_name}
