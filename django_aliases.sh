@@ -226,11 +226,14 @@ function django_init() {
   echo "mv ${django_name} ${project_name}"
   cd $project_name
 
-echo "\n\n# Django [django_init] appending:
+app_path_settings=$(cat << EOF
+# Django [django_init] appending:
 LOGIN_URL = '/login'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-" >> ${django_name}/settings.py
+EOF
+)
+   echo $app_path_settings >> ${django_name}/settings.py
 
 gitignore_settings=$(cat << EOF
 secret_key.txt
@@ -265,9 +268,10 @@ EOF
   new_secret_line="with open(BASE_DIR \/ 'secret_key.txt', 'r') as file:\n\tSECRET_KEY = file.read().rstrip()"
   sed -i "" "s/SECRET_KEY.*/${new_secret_line}/" ${django_name}/settings.py
 
-  echo "INSTALLED_APPS.append('crispy_forms')" >> ${django_name}/settings.py
+  echo "\nINSTALLED_APPS.append('crispy_forms')\n" >> ${django_name}/settings.py
 
   if [ do_app = 1 ]; then
+      echo "Downloading: custom_user_auth_app"
      django_add_existing_app custom_user_auth_app ${django_name}
   fi
 
