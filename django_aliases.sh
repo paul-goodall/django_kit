@@ -193,6 +193,7 @@ urlpatterns.append(path('', include(('${app_name}.urls', '${app_name}'), namespa
 
 EOF
 )
+   echo $my_app_inc >> ${django_name}/urls.py
 
   python3 manage.py migrate
 
