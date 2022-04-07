@@ -180,10 +180,18 @@ INSTALLED_APPS.append('${app_name}')
 
 EOF
 )
-    echo $my_app_inc >> ${django_name}/settings.py
+   echo $my_app_inc >> ${django_name}/settings.py
+
+
+auth_app_extras=$(cat << EOF
+INSTALLED_APPS.append('fontawesomefree')
+AUTH_USER_MODEL = '${app_name}.MyUser'
+
+EOF
+)
 
   if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
-    echo "INSTALLED_APPS.append('fontawesomefree')\n"  >> ${django_name}/settings.py
+    echo $auth_app_extras >> ${django_name}/settings.py
   fi
 
 my_url_settings=$(cat << EOF
@@ -193,7 +201,7 @@ urlpatterns.append(path('', include(('${app_name}.urls', '${app_name}'), namespa
 
 EOF
 )
-   echo $my_app_inc >> ${django_name}/urls.py
+   echo $my_url_settings >> ${django_name}/urls.py
 
   python3 manage.py migrate
 
