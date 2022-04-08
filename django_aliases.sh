@@ -39,7 +39,7 @@ function django_create_new_app() {
 base_app=""
 [ -d "./default_app" ]          && base_app="default_app"
 [ -d "./custom_user_auth_app" ] && base_app="custom_user_auth_app"
-if [ "$app_name" = "default_app" ]; then
+if [ "$base_app" = "" ]; then
   echo "No BASE_APP is present. Exiting."
   return 1
 fi
@@ -48,6 +48,7 @@ fi
 # Create the app and the standard directories that you will need:
   python3 manage.py startapp $app_name
   mkdir -p $app_name/templates/$app_name
+  mkdir -p $app_name/templates/navbar
   mkdir -p $app_name/static/$app_name
   mkdir -p media/$app_name/images
 
@@ -64,6 +65,7 @@ EOF
 my_app_urls=$(cat << EOF
 from django.urls import path, re_path
 from . import views as ${app_name}_views
+app_name = "${app_name}"
 urlpatterns = [
     path('${app_name}/', ${app_name}_views.${app_name}_home, name='home'),
 ]
@@ -147,7 +149,7 @@ function django_add_existing_app() {
   base_app=""
   [ -d "./default_app" ]          && base_app="default_app"
   [ -d "./custom_user_auth_app" ] && base_app="custom_user_auth_app"
-  if [ "$app_name" = "default_app" ]; then
+  if [ "$base_app" = "" ]; then
     echo "No BASE_APP is present. Exiting."
     return 1
   fi
