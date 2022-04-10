@@ -125,6 +125,10 @@ EOF
 # Register the app with the NavBar script in the BASE_APP:
   echo "${app_name}" >> ${base_app}/create_navbar/list_apps.txt
 
+  bash master_app/create_navbar/create_navbar_base.sh
+  python3 manage.py makemigrations
+  python3 manage.py migrate
+
 }
 # =====================
 function django_add_existing_app() {
@@ -204,7 +208,9 @@ urlpatterns.append(path('', include(('${app_name}.urls', '${app_name}'), namespa
 EOF
 )
    echo $my_url_settings >> ${django_name}/urls.py
-
+   bash master_app/create_navbar/create_navbar_base.sh
+   python3 manage.py makemigrations
+   python3 manage.py migrate
 
 
 }
@@ -286,9 +292,6 @@ EOF
       echo "Downloading: master_app"
      django_add_existing_app master_app ${django_name}
   fi
-
-  python3 manage.py makemigrations
-  python3 manage.py migrate
 
   open -a Atom .
 }
