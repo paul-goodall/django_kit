@@ -205,7 +205,7 @@ EOF
 )
    echo $my_url_settings >> ${django_name}/urls.py
 
-  python3 manage.py migrate
+
 
 }
 # =====================
@@ -286,6 +286,9 @@ EOF
       echo "Downloading: master_app"
      django_add_existing_app master_app ${django_name}
   fi
+
+  python3 manage.py makemigrations
+  python3 manage.py migrate
 
   open -a Atom .
 }
