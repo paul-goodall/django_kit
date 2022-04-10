@@ -38,7 +38,7 @@ function django_create_new_app() {
 # Determine which BASE_APP is present already within the project:
 base_app=""
 [ -d "./default_app" ]          && base_app="default_app"
-[ -d "./custom_user_auth_app" ] && base_app="custom_user_auth_app"
+[ -d "./master_app" ] && base_app="master_app"
 if [ "$base_app" = "" ]; then
   echo "No BASE_APP is present. Exiting."
   return 1
@@ -148,7 +148,7 @@ function django_add_existing_app() {
 # Determine which BASE_APP is present already within the project:
   base_app=""
   [ -d "./default_app" ]          && base_app="default_app"
-  [ -d "./custom_user_auth_app" ] && base_app="custom_user_auth_app"
+  [ -d "./master_app" ] && base_app="master_app"
   if [ "$base_app" = "" ]; then
     echo "No BASE_APP is present. Exiting."
     return 1
@@ -163,14 +163,14 @@ function django_add_existing_app() {
   mkdir -p $app_name/static/$app_name
   mkdir -p media/$app_name/images
 
-  if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
+  if [ "$app_name" = "default_app" ] || [ "$app_name" = "master_app" ]; then
       rm $app_name/create_navbar/list_apps.txt
       touch $app_name/create_navbar/list_apps.txt
   fi
   echo "${app_name}" >> ${base_app}/create_navbar/list_apps.txt
   touch $app_name/templates/$app_name/navbar.html
 
-  if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
+  if [ "$app_name" = "default_app" ] || [ "$app_name" = "master_app" ]; then
       bash ${base_app}/create_navbar/create_navbar_base.sh
   fi
 
@@ -192,7 +192,7 @@ AUTH_USER_MODEL = '${app_name}.MyUser'
 EOF
 )
 
-  if [ "$app_name" = "default_app" ] || [ "$app_name" = "custom_user_auth_app" ]; then
+  if [ "$app_name" = "default_app" ] || [ "$app_name" = "master_app" ]; then
     echo $auth_app_extras >> ${django_name}/settings.py
   fi
 
@@ -283,8 +283,8 @@ EOF
 
 
   if [ "$do_app" -eq "1" ]; then
-      echo "Downloading: custom_user_auth_app"
-     django_add_existing_app custom_user_auth_app ${django_name}
+      echo "Downloading: master_app"
+     django_add_existing_app master_app ${django_name}
   fi
 
   open -a Atom .
