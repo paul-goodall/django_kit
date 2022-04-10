@@ -125,6 +125,7 @@ EOF
 # Register the app with the NavBar script in the BASE_APP:
   echo "${app_name}" >> ${base_app}/create_navbar/list_apps.txt
 
+  # Renewing the Navbar and doing the migrations:
   bash master_app/create_navbar/create_navbar_base.sh
   python3 manage.py makemigrations
   python3 manage.py migrate
@@ -204,6 +205,8 @@ urlpatterns.append(path('', include(('${app_name}.urls', '${app_name}'), namespa
 EOF
 )
    echo $my_url_settings >> ${django_name}/urls.py
+
+   # Renewing the Navbar and doing the migrations:
    bash master_app/create_navbar/create_navbar_base.sh
    python3 manage.py makemigrations
    python3 manage.py migrate
