@@ -174,10 +174,6 @@ function django_add_existing_app() {
   echo "${app_name}" >> ${base_app}/create_navbar/list_apps.txt
   touch $app_name/templates/$app_name/navbar.html
 
-  if [ "$app_name" = "default_app" ] || [ "$app_name" = "master_app" ]; then
-      bash ${base_app}/create_navbar/create_navbar_base.sh
-  fi
-
 
   # Register your new in the Project Settings:
 my_app_inc=$(cat << EOF
